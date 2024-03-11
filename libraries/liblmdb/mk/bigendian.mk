@@ -1,0 +1,2 @@
+<mk/endian.mk
+CFLAGS=$CFLAGS -D__BYTE_ORDER=4321

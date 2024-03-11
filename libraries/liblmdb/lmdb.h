@@ -175,7 +175,7 @@ extern "C" {
 #endif
 
 /** Unix permissions for creating files, or dummy definition for Windows */
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__plan9__)
 typedef	int	mdb_mode_t;
 #else
 typedef	mode_t	mdb_mode_t;

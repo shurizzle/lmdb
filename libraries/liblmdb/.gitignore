@@ -22,3 +22,6 @@ core.*
 valgrind.*
 man/
 html/
+external/npe
+libnpe.a
+libnpe_pthread.a

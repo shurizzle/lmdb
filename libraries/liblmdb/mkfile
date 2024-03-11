@@ -1,0 +1,31 @@
+</$objtype/mkfile
+<mk/$objtype.mk
+
+NPE=./external/npe
+
+CFLAGS=-I$NPE/include/npe $CFLAGS -D__plan9__ -D__plan9_keep_main__ \
+	-D__${objtype}__ -D_POSIX_SOURCE=1 -Dvolatile=
+
+default:V: all
+
+all:V: mdb.$O
+
+external/npe:
+	cd external && git/clone https://git.sr.ht/~ft/npe
+
+external/npe/%: external/npe
+
+fetch:VQ: external/npe
+
+mdb.$O: midl.c midl.h lmdb.h mdb.c fakerrno.h external/npe mkfile
+	$CC -p $CFLAGS -o mdb.$O mdb.c
+
+libnpe.a: external/npe
+	@{cd external && mk -f libnpe.mk compile}
+
+libnpe_pthread.a: external/npe
+	@{cd external && mk -f libnpe_pthread.mk compile}
+
+clean:V:
+	@{cd external && mk -f libnpe.mk clean && mk -f libnpe_pthread.mk clean}
+	rm -f mdb.$O

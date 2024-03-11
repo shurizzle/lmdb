@@ -35,6 +35,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
 #endif
+#include "fakerrno.h"
 #if defined(MDB_VL32) || defined(__WIN64__)
 #define _FILE_OFFSET_BITS	64
 #endif
@@ -100,11 +101,15 @@ static NtCloseFunc *NtClose;
 #else
 #include <sys/types.h>
 #include <sys/stat.h>
-#define MDB_PID_T	pid_t
 #define MDB_THR_T	pthread_t
+#ifdef __plan9__
+#define MDB_PID_T	int
+#else
+#define MDB_PID_T	pid_t
 #include <sys/param.h>
 #include <sys/uio.h>
 #include <sys/mman.h>
+#endif
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
@@ -173,6 +178,12 @@ typedef SSIZE_T	ssize_t;
 #endif
 
 #ifndef _WIN32
+#ifdef __plan9__
+#define MDB_USE_POSIX_MUTEX	1
+#include <pthread.h>
+#include "./external/npe/libnpe_pthread/_pthread.h"
+typedef unsigned int pthread_key_t;
+#else
 #include <pthread.h>
 #include <signal.h>
 #ifdef MDB_USE_POSIX_SEM
@@ -191,6 +202,7 @@ union semun {
 #else
 #define MDB_USE_POSIX_MUTEX	1
 #endif /* MDB_USE_POSIX_SEM */
+#endif /* __plan9__ */
 #endif /* !_WIN32 */
 
 #if defined(_WIN32) + defined(MDB_USE_POSIX_SEM) + defined(MDB_USE_SYSV_SEM) \
@@ -1022,7 +1034,11 @@ typedef struct MDB_page {
 		} pb;
 		uint32_t	pb_pages;	/**< number of overflow pages */
 	} mp_pb;
+#ifndef __plan9__
 	indx_t		mp_ptrs[0];		/**< dynamic size */
+#else
+	indx_t		mp_ptrs[];
+#endif
 } MDB_page;
 
 /** Alternate page header, for 2-byte aligned access */
@@ -1032,7 +1048,11 @@ typedef struct MDB_page2 {
 	uint16_t	mp2_flags;
 	indx_t		mp2_lower;
 	indx_t		mp2_upper;
+#ifndef __plan9__
 	indx_t		mp2_ptrs[0];
+#else
+	indx_t		mp2_ptrs[];
+#endif
 } MDB_page2;
 
 #define MP_PGNO(p)	(((MDB_page2 *)(void *)(p))->mp2_p)
